@@ -1,0 +1,55 @@
+name: Scheduled jobs
+
+# Replaces the sub-daily Vercel Cron jobs (not available on the Hobby plan).
+# The daily refresh-token job stays in vercel.json.
+#
+# Requires two repo secrets (Settings -> Secrets and variables -> Actions):
+#   APP_URL      e.g. https://manychat.vercel.app  (no trailing slash)
+#   CRON_SECRET  same value as the Vercel env var
+#
+# Note: GitHub's scheduled runs can be delayed several minutes under load,
+# and schedules are paused after 60 days with no repo activity.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # process-events
+    - cron: "*/15 * * * *"  # sync-inbox (also runs on the */5 tick every 15 min)
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Which job to run
+        type: choice
+        options: [process-events, sync-inbox, both]
+        default: both
+
+concurrency:
+  group: scheduled-jobs
+  cancel-in-progress: false
+
+jobs:
+  process-events:
+    if: github.event_name == 'schedule' || inputs.job == 'process-events' || inputs.job == 'both'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger process-events
+        run: |
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/process-events")
+          echo "HTTP $code"; cat /tmp/body; echo
+          [ "$code" = "200" ]
+
+  sync-inbox:
+    # Only on the 15-minute cron line, or manual dispatch.
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *') ||
+      inputs.job == 'sync-inbox' || inputs.job == 'both'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger sync-inbox
+        run: |
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/sync-inbox")
+          echo "HTTP $code"; cat /tmp/body; echo
+          [ "$code" = "200" ]

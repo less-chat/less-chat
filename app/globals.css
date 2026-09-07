@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-ink: #17171a;
+  --color-muted: #6b6b76;
+  --color-line: #e6e6ea;
+  --color-accent: #6d28d9;
+  --color-accent-soft: #f3efff;
+  --color-good: #157f4a;
+  --color-good-soft: #e8f6ee;
+  --color-bad: #b3261e;
+  --color-bad-soft: #fdecea;
+  --color-warn: #8a5a00;
+  --color-warn-soft: #fdf3e0;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inputs are used heavily in the automation builder; give them one shared look. */
+.field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+.field:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
