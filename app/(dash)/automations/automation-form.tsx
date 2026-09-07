@@ -335,7 +335,7 @@ export function AutomationForm({ action, defaults, posts, submitLabel }: Props) 
 
           <div className="mt-4">
             <p className="text-xs text-muted">They get a DM</p>
-            <div className="mt-1.5 rounded-2xl rounded-br-sm bg-accent px-3.5 py-2.5 text-sm break-words text-white">
+            <div className="mt-1.5 rounded-2xl rounded-br-sm bg-accent px-3.5 py-2.5 text-sm break-words whitespace-pre-wrap text-white">
               {previewDm || "your message"}
             </div>
           </div>
