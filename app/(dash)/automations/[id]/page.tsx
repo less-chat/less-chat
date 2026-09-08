@@ -60,6 +60,10 @@ export default async function EditAutomationPage({
       </div>
 
       <AutomationForm
+        // Remount on every save so the form re-seeds its uncontrolled fields
+        // (post picker, name, match mode) from the freshly-persisted row —
+        // without this they keep showing the pre-save values until a reload.
+        key={row.updatedAt.toISOString()}
         action={updateAutomation}
         posts={posts}
         submitLabel={row.status === "live" ? "Save changes" : "Publish"}

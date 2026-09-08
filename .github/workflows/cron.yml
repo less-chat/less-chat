@@ -7,13 +7,15 @@ name: Scheduled jobs
 #   APP_URL      e.g. https://manychat.vercel.app  (no trailing slash)
 #   CRON_SECRET  same value as the Vercel env var
 #
-# Note: GitHub's scheduled runs can be delayed several minutes under load,
-# and schedules are paused after 60 days with no repo activity.
+# Note: GitHub's scheduled runs can be delayed several minutes under load.
+# GitHub disables scheduled workflows after 60 days with no repo activity; the
+# weekly `keepalive` job below refreshes that timer so the schedule keeps running.
 
 on:
   schedule:
     - cron: "*/5 * * * *"   # process-events
     - cron: "*/15 * * * *"  # sync-inbox (also runs on the */5 tick every 15 min)
+    - cron: "0 6 * * 1"     # keepalive (weekly, Mondays 06:00 UTC)
   workflow_dispatch:
     inputs:
       job:
@@ -38,6 +40,19 @@ jobs:
             "${{ secrets.APP_URL }}/api/cron/process-events")
           echo "HTTP $code"; cat /tmp/body; echo
           [ "$code" = "200" ]
+
+  # Keeps this workflow's schedule from being auto-disabled after 60 days of
+  # repo inactivity. Runs weekly, well inside the window; re-enables the
+  # workflow via the API (GITHUB_TOKEN) and only commits a no-op if needed.
+  keepalive:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
 
   sync-inbox:
     # Only on the 15-minute cron line, or manual dispatch.
